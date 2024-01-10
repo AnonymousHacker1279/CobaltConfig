@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "${loader_version_range}"
+license = "MIT"
+issueTrackerURL = "https://github.com/AnonymousHacker1279/CobaltConfig/issues"
+
+[[mods]]
+modId = "cobaltconfig"
+version = "${mod_version}"
+displayName = "Cobalt Config"
+# displayURL = "https://www.curseforge.com/minecraft/mc-mods/cobalt-config"
+# updateJSONURL = "https://raw.githubusercontent.com/AnonymousHacker1279/CobaltConfig/master/update.json"
+logoFile = "logo.png"
+credits = "Written by AnonymousHacker1279"
+authors = "AnonymousHacker1279"
+description = '''
+Cobalt Config is a simple library that makes dealing with configurations easier.
+'''
+
+[[dependencies.cobaltconfig]]
+modId = "neoforge"
+type = "required"
+versionRange = "${neoforge_version_range}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.cobaltconfig]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_version_range}"
+ordering = "NONE"
+side = "BOTH"

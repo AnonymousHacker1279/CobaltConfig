@@ -1,0 +1,3 @@
+{
+	"cobaltconfig.networking.failure.generic": "A networking error occurred while syncing configurations: %s"
+}
