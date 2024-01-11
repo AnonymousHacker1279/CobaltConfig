@@ -11,11 +11,11 @@ Using it is dead simple. Somewhere (ideally in your mod constructor), create a `
 
 ```java
 public YourMod(IEventBus modEventBus) {
-	// Creates a config named "mod_id.json"
-	new ConfigBuilder("mod_id", ConfigEntries.class).build();
+	// Creates a config named "modid.json"
+	new ConfigBuilder("modid", ConfigEntries.class).build();
 
-	// Creates a config named "mod_id-client.json", and marks it as client-only
-	new ConfigBuilder("mod_id", "client", ConfigClientEntries.class).setClientOnly(true).build();
+	// Creates a config named "modid-client.json", and marks it as client-only
+	new ConfigBuilder("modid", "client", ConfigClientEntries.class).setClientOnly(true).build();
 }
 ```
 
@@ -30,7 +30,7 @@ public static class ConfigEntries {
 	@ConfigEntry(type = Integer.class, comment = "This is an int config option")
 	public static int testIntOption = 50;   // Creates a JSON key named "testIntOption" with a default value of 50
 
-	@ConfigEntry(type = Double.class, comment = "This is a double config option")
+	@ConfigEntry(type = Double.class, translatableComment = "test.config.translate")
 	public static double testDoubleOption = 10.0;   // Creates a JSON key named "testDoubleOption" with a default value of 10.0
 
 	@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
@@ -60,3 +60,29 @@ The library handles the rest. You can then access the config values directly via
 
 Reloading from within the game is also possible via the game's `/reload` command. This will reload all configs, and will
 sync them to connected clients.
+
+### Configuration Menu
+
+Cobalt Config is equipped with a simple configuration menu which is accessible via the mod menu "Config" button for any
+mods that implement this library. Simply register the configuration screen during mod construction and no other work is
+required:
+
+```java
+
+@SubscribeEvent
+public static void constructMod(FMLConstructModEvent event) {
+	ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+			() -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> CobaltConfigScreen.getScreen(screen, CobaltConfig.MOD_ID)));
+}
+```
+
+Comments added via annotations will be displayed next to each entry. They may either be plaintext or translation keys.
+
+When using the configuration menu, your language file should also contain entries for each entry. They might look
+something like this:
+
+```json
+{
+	"modid.cobaltconfig.yourField": "This is a translation key for the config option yourField"
+}
+```

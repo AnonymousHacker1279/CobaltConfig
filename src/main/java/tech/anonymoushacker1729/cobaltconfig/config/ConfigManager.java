@@ -2,6 +2,7 @@ package tech.anonymoushacker1729.cobaltconfig.config;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import net.minecraft.network.chat.Component;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus.AvailableSince;
@@ -22,6 +23,8 @@ public class ConfigManager {
 	private final Class<?> configClass;
 	private final Path path;
 	private final boolean clientOnly;
+	private final String configName;
+	private final boolean isConfigNameTranslatable;
 
 	private static final List<ConfigManager> instances = new ArrayList<>(10);
 
@@ -37,11 +40,13 @@ public class ConfigManager {
 	 * @param configClass the config class
 	 * @param clientOnly  whether the config is client-only
 	 */
-	private ConfigManager(String modId, @Nullable String suffix, Class<?> configClass, boolean clientOnly) {
+	private ConfigManager(String modId, @Nullable String suffix, Class<?> configClass, boolean clientOnly, String configName, boolean isConfigNameTranslatable) {
 		this.modId = modId;
 		this.configClass = configClass;
 		this.path = getConfigPath(modId, suffix);
 		this.clientOnly = clientOnly;
+		this.configName = configName;
+		this.isConfigNameTranslatable = isConfigNameTranslatable;
 
 		instances.add(this);
 
@@ -60,6 +65,8 @@ public class ConfigManager {
 		@Nullable
 		private final String suffix;
 		private boolean clientOnly = false;
+		private String configName;
+		private boolean isConfigNameTranslatable;
 
 		/**
 		 * Creates a new <code>ConfigBuilder</code> instance with no suffix.
@@ -84,6 +91,7 @@ public class ConfigManager {
 			this.modId = modId;
 			this.configClass = configClass;
 			this.suffix = suffix;
+			this.configName = configClass.getSimpleName();
 		}
 
 		/**
@@ -102,11 +110,28 @@ public class ConfigManager {
 		}
 
 		/**
+		 * Set the config name. If not provided, the config class name will be used.
+		 *
+		 * <p>
+		 * This is used for listing available config buttons in the config screen, if one is registered.
+		 *
+		 * @param configName               the config name
+		 * @param isConfigNameTranslatable whether the config name is translatable
+		 * @return ConfigBuilder
+		 */
+		@AvailableSince("1.0.0")
+		public ConfigBuilder setConfigName(String configName, boolean isConfigNameTranslatable) {
+			this.configName = configName;
+			this.isConfigNameTranslatable = isConfigNameTranslatable;
+			return this;
+		}
+
+		/**
 		 * Build a new <code>ConfigManager</code> instance.
 		 */
 		@AvailableSince("1.0.0")
 		public void build() {
-			new ConfigManager(modId, suffix, configClass, clientOnly);
+			new ConfigManager(modId, suffix, configClass, clientOnly, configName, isConfigNameTranslatable);
 		}
 	}
 
@@ -115,7 +140,8 @@ public class ConfigManager {
 	 *
 	 * @param configClass the config class
 	 */
-	private void initializeConfig(Class<?> configClass) {
+	@Internal
+	public void initializeConfig(Class<?> configClass) {
 		Map<String, Object> configValues = openConfig();
 
 		for (Field field : configClass.getDeclaredFields()) {
@@ -248,7 +274,13 @@ public class ConfigManager {
 				return new HashMap<>(mapValue);
 			}
 
-			return defaultValue.getClass().cast(configValue);
+			try {
+				return defaultValue.getClass().cast(configValue);
+			} catch (ClassCastException e) {
+				CobaltConfig.LOGGER.error("Failed to read config file for mod " + modId + "! The following error was thrown:");
+				CobaltConfig.LOGGER.error("The value " + configValue + " is not of type " + defaultValue.getClass().getSimpleName());
+				throw new RuntimeException(e);
+			}
 		} else {
 			return defaultValue;
 		}
@@ -345,12 +377,101 @@ public class ConfigManager {
 	}
 
 	/**
+	 * Get the list of configuration managers for a specific mod ID.
+	 *
+	 * @param modId            the mod ID
+	 * @param ignoreClientOnly whether to ignore client-only configs
+	 * @return List
+	 */
+	public static List<ConfigManager> getManagers(String modId, boolean ignoreClientOnly) {
+		if (ignoreClientOnly) {
+			return instances.stream().filter(manager -> !manager.clientOnly && manager.modId.equals(modId)).toList();
+		}
+
+		return instances;
+	}
+
+	/**
 	 * Gets the config class.
 	 *
 	 * @return Class
 	 */
 	public Class<?> getConfigClass() {
 		return configClass;
+	}
+
+	/**
+	 * Get a {@link ConfigEntry#comment()} for a given key if present.
+	 *
+	 * @param configClass the config class
+	 * @param key         the key
+	 * @return the comment or null if not present
+	 */
+	@Nullable
+	@AvailableSince("1.0.0")
+	public static String getComment(Class<?> configClass, String key) {
+		try {
+			Field field = configClass.getField(key);
+			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			if (configEntry != null) {
+				return configEntry.comment();
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Config field not found: " + key, e);
+		}
+		return null;
+	}
+
+	/**
+	 * Get a {@link ConfigEntry#translatableComment()} for a given key if present.
+	 *
+	 * @param configClass the config class
+	 * @param key         the key
+	 * @return the translatable comment or null if not present
+	 */
+	@Nullable
+	@AvailableSince("1.0.0")
+	public static String getTranslatableComment(Class<?> configClass, String key) {
+		try {
+			Field field = configClass.getField(key);
+			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			if (configEntry != null) {
+				return configEntry.translatableComment();
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Config field not found: " + key, e);
+		}
+		return null;
+	}
+
+	/**
+	 * Gets the config name as a {@link Component}.
+	 *
+	 * @return Component
+	 */
+	@AvailableSince("1.0.0")
+	public Component getConfigName() {
+		return isConfigNameTranslatable ? Component.translatable(configName) : Component.literal(configName);
+	}
+
+	/**
+	 * Gets the mod ID.
+	 *
+	 * @return String
+	 */
+	@AvailableSince("1.0.0")
+	public String getModId() {
+		return modId;
+	}
+
+	/**
+	 * Returns whether the config is client-only.
+	 *
+	 * @return boolean
+	 */
+	@AvailableSince("1.0.0")
+	public boolean isClientOnly() {
+		return clientOnly;
 	}
 
 	/**

@@ -3,6 +3,7 @@ package tech.anonymoushacker1729.cobaltconfig;
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
@@ -31,6 +32,7 @@ public class CobaltConfig {
 		modEventBus.addListener(this::registerPayloadHandlerEvent);
 
 		NeoForge.EVENT_BUS.addListener(this::reloadEvent);
+		NeoForge.EVENT_BUS.addListener(this::clientPlayerNetworkLoggingOutEvent);
 	}
 
 	public void registerGameConfigurationEvent(final OnGameConfigurationEvent event) {
@@ -62,5 +64,10 @@ public class CobaltConfig {
 				}
 			});
 		}
+	}
+
+	public void clientPlayerNetworkLoggingOutEvent(ClientPlayerNetworkEvent.LoggingOut event) {
+		// Reload all configuration files in case a server was using different values
+		ConfigManager.reloadAll();
 	}
 }

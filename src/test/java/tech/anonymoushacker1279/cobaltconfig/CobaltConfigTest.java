@@ -1,13 +1,17 @@
 package tech.anonymoushacker1279.cobaltconfig;
 
 import net.minecraft.world.entity.player.Player;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModLoadingContext;
 import net.neoforged.fml.common.Mod.EventBusSubscriber;
 import net.neoforged.fml.common.Mod.EventBusSubscriber.Bus;
 import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.fml.event.lifecycle.FMLConstructModEvent;
+import net.neoforged.neoforge.client.ConfigScreenHandler;
 import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
 import tech.anonymoushacker1729.cobaltconfig.CobaltConfig;
+import tech.anonymoushacker1729.cobaltconfig.client.CobaltConfigScreen;
 import tech.anonymoushacker1729.cobaltconfig.config.ConfigEntry;
 import tech.anonymoushacker1729.cobaltconfig.config.ConfigManager.ConfigBuilder;
 
@@ -34,8 +38,23 @@ public class CobaltConfigTest {
 			LOGGER.info("Cobalt Config Test is starting");
 
 			// Test config
-			new ConfigBuilder(CobaltConfig.MOD_ID, "test", TestConfigEntries.class).build();
-			new ConfigBuilder(CobaltConfig.MOD_ID, "test-client", TestConfigClientEntries.class).setClientOnly(true).build();
+			new ConfigBuilder(CobaltConfig.MOD_ID, "test", TestConfigEntries.class)
+					.setConfigName("Test Common Config", false)
+					.build();
+			new ConfigBuilder(CobaltConfig.MOD_ID, "test-client", TestConfigClientEntries.class)
+					.setConfigName("Test Client Config", false)
+					.setClientOnly(true)
+					.build();
+		}
+	}
+
+	@EventBusSubscriber(modid = CobaltConfig.MOD_ID, bus = Bus.MOD, value = Dist.CLIENT)
+	public static class ClientModEventSubscriber {
+
+		@SubscribeEvent
+		public static void constructMod(FMLConstructModEvent event) {
+			ModLoadingContext.get().registerExtensionPoint(ConfigScreenHandler.ConfigScreenFactory.class,
+					() -> new ConfigScreenHandler.ConfigScreenFactory((mc, screen) -> CobaltConfigScreen.getScreen(screen, CobaltConfig.MOD_ID)));
 		}
 	}
 
@@ -57,7 +76,7 @@ public class CobaltConfigTest {
 		@ConfigEntry(type = Integer.class, comment = "This is an int config option")
 		public static int testIntOption = 50;
 
-		@ConfigEntry(type = Double.class, comment = "This is a double config option")
+		@ConfigEntry(type = Double.class, translatableComment = "test.config.translate")
 		public static double testDoubleOption = 10.0;
 
 		@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
