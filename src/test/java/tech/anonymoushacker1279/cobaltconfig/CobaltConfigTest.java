@@ -76,16 +76,16 @@ public class CobaltConfigTest {
 		@ConfigEntry(type = Integer.class, comment = "This is an int config option")
 		public static int testIntOption = 50;
 
-		@ConfigEntry(type = Double.class, translatableComment = "test.config.translate")
+		@ConfigEntry(type = Double.class, comment = "This is a double config option")
 		public static double testDoubleOption = 10.0;
 
 		@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
 		public static boolean testBoolean = true;
 
-		@ConfigEntry(type = List.class, comment = "This is a list config option")
+		@ConfigEntry(type = List.class, comment = "This is a list config option", group = "Test Group")
 		public static List<Integer> testList = Arrays.asList(1, 2, 3);
 
-		@ConfigEntry(type = Map.class, comment = "This is a map config option")
+		@ConfigEntry(type = Map.class, comment = "This is a map config option", group = "Test Group")
 		public static Map<String, ?> testMap = new HashMap<>() {{
 			put("key1", "value1");
 			put("key2", 3);

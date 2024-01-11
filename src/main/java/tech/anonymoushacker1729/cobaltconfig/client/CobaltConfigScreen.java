@@ -139,7 +139,9 @@ public class CobaltConfigScreen extends Screen {
 				}
 			}
 
-			minecraft.setScreen(parent);
+			if (!failed) {
+				minecraft.setScreen(parent);
+			}
 		}).bounds(this.width / 2 + 4, this.height - 28, 150, 20).build());
 
 		// Add a cancel button
@@ -200,7 +202,6 @@ public class CobaltConfigScreen extends Screen {
 				this.button = Button.builder(configManager.getConfigName(), button -> {
 							// Reload the config from file in case it was changed externally
 							configManager.initializeConfig(configManager.getConfigClass());
-							// Retrieve the config values
 							Map<String, Object> configValues = ConfigManager.classToMap(configManager.getConfigClass());
 
 							if (configValues != null) {
@@ -208,7 +209,7 @@ public class CobaltConfigScreen extends Screen {
 									configValueList.clearEntries();
 								}
 
-								configValueList = addRenderableWidget(new ConfigValueList(minecraft, height - 60, 7, 25, configValues, configManager.getConfigClass()));
+								configValueList = addRenderableWidget(new ConfigValueList(minecraft, height - 60, 7, 25, configValues, configManager));
 
 								// Hide the splash text
 								if (splashTextWidget != null) {
@@ -245,15 +246,43 @@ public class CobaltConfigScreen extends Screen {
 
 	public class ConfigValueList extends ContainerObjectSelectionList<ConfigValueEntry> {
 
-		public ConfigValueList(Minecraft minecraft, int height, int y, int itemHeight, Map<String, Object> configValues, Class<?> configClass) {
+		List<MultiLineTextWidget> groupTextWidgets = new ArrayList<>(15);
+
+		public ConfigValueList(Minecraft minecraft, int height, int y, int itemHeight, Map<String, Object> configValues, ConfigManager configManager) {
 			super(minecraft, minecraft.getWindow().getGuiScaledWidth() - 214, height, y, itemHeight);
+			Class<?> configClass = configManager.getConfigClass();
 
 			setX(200);
 
-			// Add entries to the list
-			int i = 0;
+			// Create a map to store the sorted entries
+			Map<String, List<Map.Entry<String, Object>>> sortedEntries = new LinkedHashMap<>(30);
+
+			// Iterate over the configValues map
 			for (Map.Entry<String, Object> entry : configValues.entrySet()) {
-				this.addEntry(new ConfigValueEntry(entry.getKey(), entry.getValue(), i++, configClass));
+				String group = ConfigManager.getGroup(configClass, entry.getKey());
+				// Add the entry to the sortedEntries map
+				sortedEntries.computeIfAbsent(group, k -> new ArrayList<>(5)).add(entry);
+			}
+
+			groupTextWidgets.clear();
+
+			// Iterate over the sortedEntries map
+			int i = 0;
+			for (Map.Entry<String, List<Map.Entry<String, Object>>> groupEntry : sortedEntries.entrySet()) {
+				int additionalHeight = 0;
+				if (!groupEntry.getKey().isEmpty()) {
+					// Add a new TextWidget for the group
+					MultiLineTextWidget groupTextWidget = new MultiLineTextWidget(parent.width / 2, 30 + i++ * 20, Component.translatable(groupEntry.getKey()), minecraft.font);
+					groupTextWidgets.add(groupTextWidget);
+					addRenderableWidget(groupTextWidget);
+
+					additionalHeight = 20;
+				}
+
+				// Add all the entries of the group to the ConfigValueList
+				for (Map.Entry<String, Object> entry : groupEntry.getValue()) {
+					this.addEntry(new ConfigValueEntry(entry.getKey(), entry.getValue(), i++, configClass, additionalHeight));
+				}
 			}
 		}
 
@@ -278,6 +307,12 @@ public class CobaltConfigScreen extends Screen {
 					entry.commentWidget.setMessage(Component.nullToEmpty(null));
 					entry.commentWidget.visible = false;
 				}
+
+				// Clear the text content of the group
+				for (MultiLineTextWidget groupTextWidget : groupTextWidgets) {
+					groupTextWidget.setMessage(Component.nullToEmpty(null));
+					groupTextWidget.visible = false;
+				}
 			}
 
 			super.clearEntries();
@@ -293,12 +328,14 @@ public class CobaltConfigScreen extends Screen {
 			@Nullable
 			private MultiLineTextWidget commentWidget;
 			private final Class<?> valueType;
+			private final int additionalHeight;
 
-			public ConfigValueEntry(String key, Object value, int index, Class<?> configClass) {
+			public ConfigValueEntry(String key, Object value, int index, Class<?> configClass, int additionalHeight) {
 				this.valueType = value.getClass();
+				this.additionalHeight = additionalHeight;
 
 				Component keyComponent = Component.translatable(modId + ".cobaltconfig." + key);
-				int elementY = 10 + index * 20;
+				int elementY = (10 + index * 20);
 				textWidget = new MultiLineTextWidget(215, elementY, keyComponent, minecraft.font);
 				textWidget.setMaxWidth(256);
 
@@ -329,13 +366,10 @@ public class CobaltConfigScreen extends Screen {
 
 				// Get the comment or translatable comment from the ConfigEntry annotation
 				String comment = ConfigManager.getComment(configClass, key);
-				String translatableComment = ConfigManager.getTranslatableComment(configClass, key);
 				Component commentComponent = null;
 
-				if (translatableComment != null && !translatableComment.isEmpty()) {
-					commentComponent = Component.translatable(translatableComment);
-				} else if (comment != null && !comment.isEmpty()) {
-					commentComponent = Component.literal(comment);
+				if (comment != null && !comment.isEmpty()) {
+					commentComponent = Component.translatable(comment);
 				}
 
 				if (commentComponent != null) {
@@ -349,16 +383,16 @@ public class CobaltConfigScreen extends Screen {
 
 			@Override
 			public void render(GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean pHovering, float pPartialTick) {
-				textWidget.setY(pTop);
+				textWidget.setY(pTop + additionalHeight);
 				textWidget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 
 				if (valueField != null) {
-					valueField.setY(pTop);
+					valueField.setY(pTop + additionalHeight);
 					valueField.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 
 				if (valueButton != null) {
-					valueButton.setY(pTop);
+					valueButton.setY(pTop + additionalHeight);
 					valueButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 

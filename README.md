@@ -30,16 +30,16 @@ public static class ConfigEntries {
 	@ConfigEntry(type = Integer.class, comment = "This is an int config option")
 	public static int testIntOption = 50;   // Creates a JSON key named "testIntOption" with a default value of 50
 
-	@ConfigEntry(type = Double.class, translatableComment = "test.config.translate")
+	@ConfigEntry(type = Double.class, comment = "This is a double config option")
 	public static double testDoubleOption = 10.0;   // Creates a JSON key named "testDoubleOption" with a default value of 10.0
 
 	@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
 	public static boolean testBoolean = true;   // Creates a JSON key named "testBoolean" with a default value of true
 
-	@ConfigEntry(type = List.class, comment = "This is a list config option")
+	@ConfigEntry(type = List.class, comment = "This is a list config option", group = "Test Group")
 	public static List<Integer> testList = Arrays.asList(1, 2, 3);   // Creates a JSON key named "testList" with a default value of [1, 2, 3]
 
-	@ConfigEntry(type = Map.class, comment = "This is a map config option")
+	@ConfigEntry(type = Map.class, comment = "This is a map config option", group = "Test Group")
 	public static Map<String, ?> testMap = new HashMap<>() {{  // Creates a JSON key named "testMap" with a default value of {"key1": "value1", "key2": 3}
 		put("key1", "value1");
 		put("key2", 3);
@@ -77,6 +77,7 @@ public static void constructMod(FMLConstructModEvent event) {
 ```
 
 Comments added via annotations will be displayed next to each entry. They may either be plaintext or translation keys.
+The same applies to groups.<sup id="a1">[1](#f1)</sup>
 
 When using the configuration menu, your language file should also contain entries for each entry. They might look
 something like this:
@@ -86,3 +87,5 @@ something like this:
 	"modid.cobaltconfig.yourField": "This is a translation key for the config option yourField"
 }
 ```
+
+<b id="f1">1</b>: Groups are a way to organize config entries in the menu. They do not affect the JSON output. [↩](#a1)

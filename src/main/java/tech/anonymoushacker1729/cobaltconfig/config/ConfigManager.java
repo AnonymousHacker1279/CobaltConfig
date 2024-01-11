@@ -241,8 +241,7 @@ public class ConfigManager {
 	private Map<String, Object> openConfig() {
 		Map<String, Object> configValues = null;
 		if (Files.exists(path)) {
-			Type type = new TypeToken<Map<String, Object>>() {
-			}.getType();
+			Type type = new TypeToken<Map<String, Object>>() {}.getType();
 			try {
 				configValues = gson.fromJson(new String(Files.readAllBytes(path)), type);
 			} catch (IOException e) {
@@ -423,25 +422,25 @@ public class ConfigManager {
 	}
 
 	/**
-	 * Get a {@link ConfigEntry#translatableComment()} for a given key if present.
+	 * Get a {@link ConfigEntry#group()} for a given key if present.
 	 *
 	 * @param configClass the config class
 	 * @param key         the key
-	 * @return the translatable comment or null if not present
+	 * @return the group if present, otherwise an empty string
 	 */
-	@Nullable
 	@AvailableSince("1.0.0")
-	public static String getTranslatableComment(Class<?> configClass, String key) {
+	public static String getGroup(Class<?> configClass, String key) {
 		try {
-			Field field = configClass.getField(key);
-			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			// Get the ConfigEntry annotation from the configClass using reflection
+			ConfigEntry configEntry = configClass.getField(key).getAnnotation(ConfigEntry.class);
 			if (configEntry != null) {
-				return configEntry.translatableComment();
+				// Get the group from the annotation
+				return configEntry.group();
 			}
 		} catch (NoSuchFieldException e) {
-			throw new RuntimeException("Config field not found: " + key, e);
+			CobaltConfig.LOGGER.error("Failed to get the group for config option " + key + "! The field does not exist.");
 		}
-		return null;
+		return "";
 	}
 
 	/**

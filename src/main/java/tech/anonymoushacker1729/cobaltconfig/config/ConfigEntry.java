@@ -1,6 +1,5 @@
 package tech.anonymoushacker1729.cobaltconfig.config;
 
-import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus.AvailableSince;
 
 import java.lang.annotation.*;
@@ -15,14 +14,12 @@ public @interface ConfigEntry {
 	Class<?> type();
 
 	/**
-	 * Any comments associated with the entry.
+	 * Any comments associated with the entry. They may be plaintext or translatable.
 	 */
 	String comment() default "";
 
 	/**
-	 * Any comments associated with the entry that should be passed through {@link Component#translatable(String)}.
-	 * <p>
-	 * Translatable comments, if present, will override the value of {@link #comment()}.
+	 * Entries may be grouped together in the config GUI. This is the name of the group this entry belongs to.
 	 */
-	String translatableComment() default "";
+	String group() default "";
 }
