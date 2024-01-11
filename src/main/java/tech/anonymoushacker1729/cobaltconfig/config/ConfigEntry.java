@@ -22,4 +22,16 @@ public @interface ConfigEntry {
 	 * Entries may be grouped together in the config GUI. This is the name of the group this entry belongs to.
 	 */
 	String group() default "";
+
+	/**
+	 * Define the minimum value for numeric entries.
+	 */
+	double min() default Double.MIN_VALUE;
+
+	/**
+	 * Define the maximum value for numeric entries.
+	 *
+	 * @return
+	 */
+	double max() default Double.MAX_VALUE;
 }

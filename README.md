@@ -27,11 +27,17 @@ And then define classes that contain your configuration entries:
  * It will be synced from the server to clients.
  */
 public static class ConfigEntries {
-	@ConfigEntry(type = Integer.class, comment = "This is an int config option")
+	@ConfigEntry(type = Integer.class, comment = "This is an int config option", max = 100)
 	public static int testIntOption = 50;   // Creates a JSON key named "testIntOption" with a default value of 50
 
-	@ConfigEntry(type = Double.class, comment = "This is a double config option")
+	@ConfigEntry(type = Double.class, comment = "This is a double config option", min = 5.0, max = 15.0)
 	public static double testDoubleOption = 10.0;   // Creates a JSON key named "testDoubleOption" with a default value of 10.0
+
+	@ConfigEntry(type = Integer.class, comment = "This is an int config option with no bounds")
+	public static int testIntOptionNoBounds = 50;   // Creates a JSON key named "testIntOptionNoBounds" with a default value of 50
+
+	@ConfigEntry(type = Double.class, comment = "This is a double config option with no bounds")
+	public static double testDoubleOptionNoBounds = 10.0;  // Creates a JSON key named "testDoubleOptionNoBounds" with a default value of 10.0
 
 	@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
 	public static boolean testBoolean = true;   // Creates a JSON key named "testBoolean" with a default value of true
@@ -78,6 +84,8 @@ public static void constructMod(FMLConstructModEvent event) {
 
 Comments added via annotations will be displayed next to each entry. They may either be plaintext or translation keys.
 The same applies to groups.<sup id="a1">[1](#f1)</sup>
+
+If min/max bounds are specified on a numeric-type entry, a slider will be displayed instead of a text box.
 
 When using the configuration menu, your language file should also contain entries for each entry. They might look
 something like this:

@@ -3,6 +3,7 @@ package tech.anonymoushacker1729.cobaltconfig.config;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.fml.loading.FMLPaths;
 import org.jetbrains.annotations.ApiStatus.AvailableSince;
@@ -266,7 +267,7 @@ public class ConfigManager {
 			Object configValue = configValues.get(name);
 
 			if (defaultValue instanceof Integer && configValue instanceof Double doubleValue) {
-				return doubleValue.intValue();
+				return (int) clampToBounds(doubleValue.intValue(), name);
 			} else if (defaultValue instanceof List && configValue instanceof List<?> listValue) {
 				return new ArrayList<>(listValue);
 			} else if (defaultValue instanceof Map && configValue instanceof Map<?, ?> mapValue) {
@@ -274,7 +275,13 @@ public class ConfigManager {
 			}
 
 			try {
-				return defaultValue.getClass().cast(configValue);
+				Object castValue = defaultValue.getClass().cast(configValue);
+
+				if (castValue instanceof Double d) {
+					return clampToBounds(d, name);
+				} else {
+					return castValue;
+				}
 			} catch (ClassCastException e) {
 				CobaltConfig.LOGGER.error("Failed to read config file for mod " + modId + "! The following error was thrown:");
 				CobaltConfig.LOGGER.error("The value " + configValue + " is not of type " + defaultValue.getClass().getSimpleName());
@@ -283,6 +290,13 @@ public class ConfigManager {
 		} else {
 			return defaultValue;
 		}
+	}
+
+	private double clampToBounds(double value, String key) {
+		double min = getMin(configClass, key);
+		double max = getMax(configClass, key);
+
+		return Mth.clamp(value, min, max);
 	}
 
 	/**
@@ -441,6 +455,48 @@ public class ConfigManager {
 			CobaltConfig.LOGGER.error("Failed to get the group for config option " + key + "! The field does not exist.");
 		}
 		return "";
+	}
+
+	/**
+	 * Get the {@link ConfigEntry#min()} for a given key if present.
+	 *
+	 * @param configClass the config class
+	 * @param key         the key
+	 * @return the min value. If not specified, it will be {@link Double#MIN_VALUE}
+	 */
+	public static Double getMin(Class<?> configClass, String key) {
+		try {
+			Field field = configClass.getField(key);
+			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			if (configEntry != null) {
+				return configEntry.min();
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Config field not found: " + key, e);
+		}
+
+		return Double.MIN_VALUE;
+	}
+
+	/**
+	 * Get the {@link ConfigEntry#max()} for a given key if present.
+	 *
+	 * @param configClass the config class
+	 * @param key         the key
+	 * @return the max value. If not specified, it will be {@link Double#MAX_VALUE}
+	 */
+	public static Double getMax(Class<?> configClass, String key) {
+		try {
+			Field field = configClass.getField(key);
+			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			if (configEntry != null) {
+				return configEntry.max();
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Config field not found: " + key, e);
+		}
+
+		return Double.MIN_VALUE;
 	}
 
 	/**

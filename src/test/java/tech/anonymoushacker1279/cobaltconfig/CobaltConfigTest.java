@@ -72,12 +72,19 @@ public class CobaltConfigTest {
 	/**
 	 * Test data which is available on both the client and server.
 	 */
+	@SuppressWarnings("unused")
 	public static class TestConfigEntries {
-		@ConfigEntry(type = Integer.class, comment = "This is an int config option")
+		@ConfigEntry(type = Integer.class, comment = "This is an int config option", max = 100)
 		public static int testIntOption = 50;
 
-		@ConfigEntry(type = Double.class, comment = "This is a double config option")
+		@ConfigEntry(type = Double.class, comment = "This is a double config option", min = 5.0, max = 15.0)
 		public static double testDoubleOption = 10.0;
+
+		@ConfigEntry(type = Integer.class, comment = "This is an int config option with no bounds")
+		public static int testIntOptionNoBounds = 50;
+
+		@ConfigEntry(type = Double.class, comment = "This is a double config option with no bounds")
+		public static double testDoubleOptionNoBounds = 10.0;
 
 		@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
 		public static boolean testBoolean = true;

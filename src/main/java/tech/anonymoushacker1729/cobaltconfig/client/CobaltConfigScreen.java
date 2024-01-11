@@ -13,6 +13,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 import org.jetbrains.annotations.Nullable;
 import tech.anonymoushacker1729.cobaltconfig.CobaltConfig;
 import tech.anonymoushacker1729.cobaltconfig.client.CobaltConfigScreen.ConfigList.ConfigFileEntry;
@@ -108,6 +109,12 @@ public class CobaltConfigScreen extends Screen {
 						}
 					} else if (entry.valueButton != null) {
 						value = entry.valueButton.getMessage().equals(CommonComponents.OPTION_ON);
+					} else if (entry.valueSlider != null) {
+						if (entry.getValueType() == Integer.class) {
+							value = entry.valueSlider.getValueInt();
+						} else {
+							value = entry.valueSlider.getValue();
+						}
 					} else {
 						continue;
 					}
@@ -302,6 +309,12 @@ public class CobaltConfigScreen extends Screen {
 					entry.valueField.setVisible(false);
 				}
 
+				// Clear the text content of the slider
+				if (entry.valueSlider != null) {
+					entry.valueSlider.setMessage(Component.nullToEmpty(null));
+					entry.valueSlider.visible = false;
+				}
+
 				// Clear the text content of the comment
 				if (entry.commentWidget != null) {
 					entry.commentWidget.setMessage(Component.nullToEmpty(null));
@@ -326,6 +339,8 @@ public class CobaltConfigScreen extends Screen {
 			@Nullable
 			private Button valueButton;
 			@Nullable
+			private CustomSliderWidget valueSlider;
+			@Nullable
 			private MultiLineTextWidget commentWidget;
 			private final Class<?> valueType;
 			private final int additionalHeight;
@@ -337,7 +352,7 @@ public class CobaltConfigScreen extends Screen {
 				Component keyComponent = Component.translatable(modId + ".cobaltconfig." + key);
 				int elementY = (10 + index * 20);
 				textWidget = new MultiLineTextWidget(215, elementY, keyComponent, minecraft.font);
-				textWidget.setMaxWidth(256);
+				textWidget.setMaxWidth(512);
 
 
 				int widgetX = minecraft.getWindow().getGuiScaledWidth() - 196; // box width of 175 + padding of 21 = 196
@@ -348,18 +363,37 @@ public class CobaltConfigScreen extends Screen {
 						btn.setMessage(currentValue ? CommonComponents.OPTION_OFF : CommonComponents.OPTION_ON);
 					}).bounds(widgetX, elementY, 175, 20).build();
 					addRenderableWidget(valueButton);
+				} else if (value instanceof Integer || value instanceof Double) {
+					double min = ConfigManager.getMin(configClass, key);
+					double max = ConfigManager.getMax(configClass, key);
+
+					if (min != Double.MIN_VALUE || max != Double.MAX_VALUE) {
+						if (value instanceof Integer integer) {
+							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, integer, valueType);
+						} else {
+							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, (double) value, valueType);
+						}
+
+						addRenderableWidget(valueSlider);
+					} else {
+						valueField = new EditBox(minecraft.font, widgetX, elementY, 175, 20, Component.nullToEmpty(""));
+						valueField.setMaxLength(9999);
+						valueField.setValue(value.toString());
+
+						// Set the filter based on the type of the value
+						if (value instanceof Integer) {
+							valueField.setFilter((str) -> str.matches("\\d*"));
+						} else if (value instanceof Double) {
+							valueField.setFilter((str) -> str.matches("\\d*(\\.\\d*)?"));
+						}
+
+						addRenderableWidget(valueField);
+					}
 				} else {
 					// Create an EditBox for other types of values
 					valueField = new EditBox(minecraft.font, widgetX, elementY, 175, 20, Component.nullToEmpty(""));
 					valueField.setMaxLength(9999);
 					valueField.setValue(value.toString());
-
-					// Set the filter based on the type of the value
-					if (value instanceof Integer) {
-						valueField.setFilter((str) -> str.matches("\\d*"));
-					} else if (value instanceof Double) {
-						valueField.setFilter((str) -> str.matches("\\d*(\\.\\d*)?"));
-					}
 
 					addRenderableWidget(valueField);
 				}
@@ -396,6 +430,11 @@ public class CobaltConfigScreen extends Screen {
 					valueButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 
+				if (valueSlider != null) {
+					valueSlider.setY(pTop + additionalHeight);
+					valueSlider.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+				}
+
 				if (commentWidget != null) {
 					int commentY = textWidget.getY() + textWidget.getHeight() + 1;
 					commentWidget.setY(commentY);
@@ -416,6 +455,21 @@ public class CobaltConfigScreen extends Screen {
 			public Class<?> getValueType() {
 				return valueType;
 			}
+		}
+	}
+
+	public static class CustomSliderWidget extends ExtendedSlider {
+
+		final Class<?> type;
+
+		public CustomSliderWidget(int x, int y, int width, int height, Component text, double minValue, double maxValue, int value, Class<?> type) {
+			super(x, y, width, height, text, Component.empty(), minValue, maxValue, value, true);
+			this.type = type;
+		}
+
+		public CustomSliderWidget(int x, int y, int width, int height, Component text, double minValue, double maxValue, double value, Class<?> type) {
+			super(x, y, width, height, text, Component.empty(), minValue, maxValue, value, 0.05D, 0, true);
+			this.type = type;
 		}
 	}
 }
