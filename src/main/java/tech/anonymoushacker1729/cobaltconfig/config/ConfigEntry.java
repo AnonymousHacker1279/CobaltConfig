@@ -8,10 +8,6 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @AvailableSince("1.0.0")
 public @interface ConfigEntry {
-	/**
-	 * The class representing the config entry type.
-	 */
-	Class<?> type();
 
 	/**
 	 * Any comments associated with the entry. They may be plaintext or translatable.
@@ -30,8 +26,6 @@ public @interface ConfigEntry {
 
 	/**
 	 * Define the maximum value for numeric entries.
-	 *
-	 * @return
 	 */
 	double max() default Double.MAX_VALUE;
 }

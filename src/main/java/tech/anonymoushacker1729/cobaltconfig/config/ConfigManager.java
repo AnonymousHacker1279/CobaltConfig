@@ -164,7 +164,7 @@ public class ConfigManager {
 					throw new RuntimeException(e);
 				} catch (IllegalArgumentException e) {
 					CobaltConfig.LOGGER.error("Failed to set config value for mod " + modId + "! The following error was thrown:");
-					CobaltConfig.LOGGER.error("The value " + value + " is not of type " + entry.type().getSimpleName());
+					CobaltConfig.LOGGER.error("The value " + value + " is not of type " + entry.getClass().getSimpleName());
 					throw new RuntimeException(e);
 				}
 			}

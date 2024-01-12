@@ -36,6 +36,8 @@ public class CobaltConfig {
 	}
 
 	public void registerGameConfigurationEvent(final OnGameConfigurationEvent event) {
+		LOGGER.info("Registering game configuration tasks");
+
 		event.register(new ConfigSyncConfigurationTask(event.getListener()));
 	}
 

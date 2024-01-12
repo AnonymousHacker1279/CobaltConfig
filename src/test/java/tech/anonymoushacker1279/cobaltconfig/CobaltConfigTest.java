@@ -74,25 +74,25 @@ public class CobaltConfigTest {
 	 */
 	@SuppressWarnings("unused")
 	public static class TestConfigEntries {
-		@ConfigEntry(type = Integer.class, comment = "This is an int config option", max = 100)
+		@ConfigEntry(comment = "This is an int config option", max = 100)
 		public static int testIntOption = 50;
 
-		@ConfigEntry(type = Double.class, comment = "This is a double config option", min = 5.0, max = 15.0)
+		@ConfigEntry(comment = "This is a double config option", min = 5.0, max = 15.0)
 		public static double testDoubleOption = 10.0;
 
-		@ConfigEntry(type = Integer.class, comment = "This is an int config option with no bounds")
+		@ConfigEntry(comment = "This is an int config option with no bounds")
 		public static int testIntOptionNoBounds = 50;
 
-		@ConfigEntry(type = Double.class, comment = "This is a double config option with no bounds")
+		@ConfigEntry(comment = "This is a double config option with no bounds")
 		public static double testDoubleOptionNoBounds = 10.0;
 
-		@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
+		@ConfigEntry(comment = "This is a boolean config option")
 		public static boolean testBoolean = true;
 
-		@ConfigEntry(type = List.class, comment = "This is a list config option", group = "Test Group")
+		@ConfigEntry(comment = "This is a list config option", group = "Test Group")
 		public static List<Integer> testList = Arrays.asList(1, 2, 3);
 
-		@ConfigEntry(type = Map.class, comment = "This is a map config option", group = "Test Group")
+		@ConfigEntry(comment = "This is a map config option", group = "Test Group")
 		public static Map<String, ?> testMap = new HashMap<>() {{
 			put("key1", "value1");
 			put("key2", 3);
@@ -103,7 +103,7 @@ public class CobaltConfigTest {
 	 * Test data which is only available on the client.
 	 */
 	public static class TestConfigClientEntries {
-		@ConfigEntry(type = Integer.class, comment = "This is an int config option")
+		@ConfigEntry(comment = "This is an int config option")
 		public static int testIntOption = 10;
 	}
 }

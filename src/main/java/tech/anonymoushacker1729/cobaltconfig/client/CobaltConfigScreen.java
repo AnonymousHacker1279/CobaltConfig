@@ -43,8 +43,8 @@ public class CobaltConfigScreen extends Screen {
 		this.modId = modId;
 	}
 
-	public static Screen getScreen(Screen parent, String modid) {
-		return new CobaltConfigScreen(parent, modid);
+	public static Screen getScreen(Screen parent, String modId) {
+		return new CobaltConfigScreen(parent, modId);
 	}
 
 	@Override

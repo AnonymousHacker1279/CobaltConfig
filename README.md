@@ -27,25 +27,25 @@ And then define classes that contain your configuration entries:
  * It will be synced from the server to clients.
  */
 public static class ConfigEntries {
-	@ConfigEntry(type = Integer.class, comment = "This is an int config option", max = 100)
+	@ConfigEntry(comment = "This is an int config option", max = 100)
 	public static int testIntOption = 50;   // Creates a JSON key named "testIntOption" with a default value of 50
 
-	@ConfigEntry(type = Double.class, comment = "This is a double config option", min = 5.0, max = 15.0)
+	@ConfigEntry(comment = "This is a double config option", min = 5.0, max = 15.0)
 	public static double testDoubleOption = 10.0;   // Creates a JSON key named "testDoubleOption" with a default value of 10.0
 
-	@ConfigEntry(type = Integer.class, comment = "This is an int config option with no bounds")
+	@ConfigEntry(comment = "This is an int config option with no bounds")
 	public static int testIntOptionNoBounds = 50;   // Creates a JSON key named "testIntOptionNoBounds" with a default value of 50
 
-	@ConfigEntry(type = Double.class, comment = "This is a double config option with no bounds")
+	@ConfigEntry(comment = "This is a double config option with no bounds")
 	public static double testDoubleOptionNoBounds = 10.0;  // Creates a JSON key named "testDoubleOptionNoBounds" with a default value of 10.0
 
-	@ConfigEntry(type = Boolean.class, comment = "This is a boolean config option")
+	@ConfigEntry(comment = "This is a boolean config option")
 	public static boolean testBoolean = true;   // Creates a JSON key named "testBoolean" with a default value of true
 
-	@ConfigEntry(type = List.class, comment = "This is a list config option", group = "Test Group")
+	@ConfigEntry(comment = "This is a list config option", group = "Test Group")
 	public static List<Integer> testList = Arrays.asList(1, 2, 3);   // Creates a JSON key named "testList" with a default value of [1, 2, 3]
 
-	@ConfigEntry(type = Map.class, comment = "This is a map config option", group = "Test Group")
+	@ConfigEntry(comment = "This is a map config option", group = "Test Group")
 	public static Map<String, ?> testMap = new HashMap<>() {{  // Creates a JSON key named "testMap" with a default value of {"key1": "value1", "key2": 3}
 		put("key1", "value1");
 		put("key2", 3);
@@ -57,7 +57,7 @@ public static class ConfigEntries {
  * It is not synced and will not generate on dedicated servers.
  */
 public static class ConfigClientEntries {
-	@ConfigEntry(type = Integer.class, comment = "This is an int config option")
+	@ConfigEntry(comment = "This is an int config option")
 	public static int testIntOption = 10;   // Creates a JSON key named "testIntOption" with a default value of 10
 }
 ```
