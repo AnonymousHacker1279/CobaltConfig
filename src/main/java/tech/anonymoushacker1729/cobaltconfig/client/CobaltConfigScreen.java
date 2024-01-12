@@ -253,7 +253,7 @@ public class CobaltConfigScreen extends Screen {
 
 	public class ConfigValueList extends ContainerObjectSelectionList<ConfigValueEntry> {
 
-		List<MultiLineTextWidget> groupTextWidgets = new ArrayList<>(15);
+		Set<String> encounteredGroups = new HashSet<>(15);
 
 		public ConfigValueList(Minecraft minecraft, int height, int y, int itemHeight, Map<String, Object> configValues, ConfigManager configManager) {
 			super(minecraft, minecraft.getWindow().getGuiScaledWidth() - 214, height, y, itemHeight);
@@ -261,32 +261,22 @@ public class CobaltConfigScreen extends Screen {
 
 			setX(200);
 
-			// Create a map to store the sorted entries
-			Map<String, List<Map.Entry<String, Object>>> sortedEntries = new LinkedHashMap<>(30);
-
-			// Iterate over the configValues map
+			Map<String, List<Map.Entry<String, Object>>> sortedEntries = new TreeMap<>();
 			for (Map.Entry<String, Object> entry : configValues.entrySet()) {
 				String group = ConfigManager.getGroup(configClass, entry.getKey());
-				// Add the entry to the sortedEntries map
 				sortedEntries.computeIfAbsent(group, k -> new ArrayList<>(5)).add(entry);
 			}
 
-			groupTextWidgets.clear();
-
-			// Iterate over the sortedEntries map
 			int i = 0;
+			int groups = 1;
 			for (Map.Entry<String, List<Map.Entry<String, Object>>> groupEntry : sortedEntries.entrySet()) {
 				int additionalHeight = 0;
 				if (!groupEntry.getKey().isEmpty()) {
-					// Add a new TextWidget for the group
-					MultiLineTextWidget groupTextWidget = new MultiLineTextWidget(parent.width / 2, 30 + i++ * 20, Component.translatable(groupEntry.getKey()), minecraft.font);
-					groupTextWidgets.add(groupTextWidget);
-					addRenderableWidget(groupTextWidget);
-
-					additionalHeight = 20;
+					additionalHeight = (20 * groups);
+					groups++;
 				}
 
-				// Add all the entries of the group to the ConfigValueList
+				// Add all the entries of the group
 				for (Map.Entry<String, Object> entry : groupEntry.getValue()) {
 					this.addEntry(new ConfigValueEntry(entry.getKey(), entry.getValue(), i++, configClass, additionalHeight));
 				}
@@ -322,9 +312,9 @@ public class CobaltConfigScreen extends Screen {
 				}
 
 				// Clear the text content of the group
-				for (MultiLineTextWidget groupTextWidget : groupTextWidgets) {
-					groupTextWidget.setMessage(Component.nullToEmpty(null));
-					groupTextWidget.visible = false;
+				if (entry.groupTextWidget != null) {
+					entry.groupTextWidget.setMessage(Component.nullToEmpty(null));
+					entry.groupTextWidget.visible = false;
 				}
 			}
 
@@ -342,6 +332,8 @@ public class CobaltConfigScreen extends Screen {
 			private CustomSliderWidget valueSlider;
 			@Nullable
 			private MultiLineTextWidget commentWidget;
+			@Nullable
+			private MultiLineTextWidget groupTextWidget;
 			private final Class<?> valueType;
 			private final int additionalHeight;
 
@@ -350,7 +342,7 @@ public class CobaltConfigScreen extends Screen {
 				this.additionalHeight = additionalHeight;
 
 				Component keyComponent = Component.translatable(modId + ".cobaltconfig." + key);
-				int elementY = (10 + index * 20);
+				int elementY = (10 + index * 20) + additionalHeight;
 				textWidget = new MultiLineTextWidget(215, elementY, keyComponent, minecraft.font);
 				textWidget.setMaxWidth(512);
 
@@ -407,38 +399,76 @@ public class CobaltConfigScreen extends Screen {
 				}
 
 				if (commentComponent != null) {
-					// Create a MultiLineTextWidget for the comment
 					commentComponent = commentComponent.copy().withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY);
-					commentWidget = new MultiLineTextWidget(225, textWidget.getY(), commentComponent, minecraft.font);
-					commentWidget.setMaxWidth(256);
+					commentWidget = new MultiLineTextWidget(225, textWidget.getY(), commentComponent, minecraft.font) {
+						@Override
+						public void renderWidget(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
+							float textCenterX = this.getX() + this.width / 2.0F;
+							float textCenterY = this.getY() + this.height / 2.0F;
+
+							pGuiGraphics.pose().translate(textCenterX, textCenterY, 0);
+							pGuiGraphics.pose().scale(0.75f, 0.75f, 1.0f);
+							pGuiGraphics.pose().translate(-textCenterX, -textCenterY, 0);
+							super.renderWidget(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+
+							pGuiGraphics.pose().setIdentity();
+						}
+					};
+					commentWidget.setMaxWidth(512);
 					addRenderableWidget(commentWidget);
+				}
+
+				// Create the group text widget if this entry is the first one in its group
+				String group = ConfigManager.getGroup(configClass, key);
+				if (isFirstInGroup(group)) {
+					groupTextWidget = new MultiLineTextWidget(150 + (ConfigValueList.this.width / 2), elementY, Component.translatable(group), minecraft.font);
+					groupTextWidget.setMaxWidth(512);
+					addRenderableWidget(groupTextWidget);
+				}
+			}
+
+			public boolean isFirstInGroup(String group) {
+				if (encounteredGroups.contains(group)) {
+					return false;
+				} else {
+					encounteredGroups.add(group);
+					return true;
 				}
 			}
 
 			@Override
 			public void render(GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean pHovering, float pPartialTick) {
-				textWidget.setY(pTop + additionalHeight);
+				int newY = pTop + additionalHeight;
+
+				// Adjust the y position based on whether the group text widget exists
+				if (groupTextWidget != null && !groupTextWidget.getMessage().getString().isEmpty()) {
+					groupTextWidget.setY(newY - 15);
+					groupTextWidget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+				}
+
+				textWidget.setY(newY);
 				textWidget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 
+				if (commentWidget != null) {
+					// Scale comments to 50% size
+					int commentY = textWidget.getY() + textWidget.getHeight() + 1;
+					commentWidget.setY(commentY);
+					commentWidget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+				}
+
 				if (valueField != null) {
-					valueField.setY(pTop + additionalHeight);
+					valueField.setY(newY);
 					valueField.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 
 				if (valueButton != null) {
-					valueButton.setY(pTop + additionalHeight);
+					valueButton.setY(newY);
 					valueButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 
 				if (valueSlider != null) {
-					valueSlider.setY(pTop + additionalHeight);
+					valueSlider.setY(newY);
 					valueSlider.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-				}
-
-				if (commentWidget != null) {
-					int commentY = textWidget.getY() + textWidget.getHeight() + 1;
-					commentWidget.setY(commentY);
-					commentWidget.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
 			}
 
