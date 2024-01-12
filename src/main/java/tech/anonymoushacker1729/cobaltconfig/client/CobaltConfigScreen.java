@@ -73,9 +73,6 @@ public class CobaltConfigScreen extends Screen {
 
 				// Iterate over the ConfigValueEntry objects in the ConfigValueList
 				for (ConfigValueEntry entry : configValueList.children()) {
-					// Get the key from the textWidget, removing the "modid.config." prefix
-					String key = entry.textWidget.getMessage().getString().replace(modId + ".cobaltconfig.", "");
-
 					// Get the value from the valueField or valueButton, depending on the type of the value
 					Object value;
 					if (entry.valueField != null) {
@@ -120,7 +117,7 @@ public class CobaltConfigScreen extends Screen {
 					}
 
 					// Add the key-value pair to the map
-					configValues.put(key, value);
+					configValues.put(entry.key, value);
 				}
 
 				if (!failed) {
@@ -335,10 +332,12 @@ public class CobaltConfigScreen extends Screen {
 			@Nullable
 			private MultiLineTextWidget groupTextWidget;
 			private final Class<?> valueType;
+			private final String key;
 			private final int additionalHeight;
 
 			public ConfigValueEntry(String key, Object value, int index, Class<?> configClass, int additionalHeight) {
 				this.valueType = value.getClass();
+				this.key = key;
 				this.additionalHeight = additionalHeight;
 
 				Component keyComponent = Component.translatable(modId + ".cobaltconfig." + key);
