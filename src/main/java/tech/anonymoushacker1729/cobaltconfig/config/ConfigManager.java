@@ -26,6 +26,7 @@ public class ConfigManager {
 	private final boolean clientOnly;
 	private final String configName;
 	private final boolean isConfigNameTranslatable;
+	private final Map<String, Object> defaultValues = new HashMap<>(30);
 
 	private static final List<ConfigManager> instances = new ArrayList<>(10);
 
@@ -151,7 +152,11 @@ public class ConfigManager {
 				// Read the value from the config file or use the default value
 				Object value;
 				try {
-					value = readValueFromConfigFile(field.getName(), field.get(null), configValues);
+					String fieldName = field.getName();
+					Object fieldValue = field.get(null);
+
+					defaultValues.put(fieldName, fieldValue);
+					value = readValueFromConfigFile(fieldName, fieldValue, configValues);
 				} catch (IllegalAccessException e) {
 					CobaltConfig.LOGGER.error("Failed to read config file for mod " + modId + "! The following error was thrown:");
 					throw new RuntimeException(e);
@@ -262,7 +267,10 @@ public class ConfigManager {
 	 * @param configValues the config values
 	 * @return Object
 	 */
+	@SuppressWarnings("unchecked")
 	private Object readValueFromConfigFile(String name, Object defaultValue, @Nullable Map<String, Object> configValues) {
+		defaultValue = defaultValues.getOrDefault(name, defaultValue);
+
 		if (configValues != null && configValues.containsKey(name)) {
 			Object configValue = configValues.get(name);
 
@@ -273,21 +281,7 @@ public class ConfigManager {
 			} else if (defaultValue instanceof List && configValue instanceof List<?> listValue) {
 				return new ArrayList<>(listValue);
 			} else if (defaultValue instanceof Map && configValue instanceof Map<?, ?> mapValue) {
-				Map<String, Object> castMap = new HashMap<>(30);
-				Map<String, Object> defaultMap = (Map<String, Object>) defaultValue;
-				for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
-					String key = (String) entry.getKey();
-					Object value = entry.getValue();
-					Object defaultMapValue = defaultMap.get(key);
-					if (defaultMapValue instanceof Integer && value instanceof Double) {
-						castMap.put(key, ((Double) value).intValue());
-					} else if (defaultMapValue instanceof Float && value instanceof Double) {
-						castMap.put(key, ((Double) value).floatValue());
-					} else {
-						castMap.put(key, value);
-					}
-				}
-				return castMap;
+				return getCastMap((Map<String, Object>) defaultValue, mapValue);
 			}
 
 			try {
@@ -308,6 +302,37 @@ public class ConfigManager {
 		}
 	}
 
+	/**
+	 * Casts the map values to the correct type as defined by the default value.
+	 *
+	 * @param defaultValue the default value
+	 * @param mapValue     the map value
+	 * @return Map
+	 */
+	private static Map<String, Object> getCastMap(Map<String, Object> defaultValue, Map<?, ?> mapValue) {
+		Map<String, Object> castMap = new HashMap<>(30);
+		for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
+			String key = (String) entry.getKey();
+			Object value = entry.getValue();
+			Object defaultMapValue = defaultValue.get(key);
+			if (defaultMapValue instanceof Integer && value instanceof Double) {
+				castMap.put(key, ((Double) value).intValue());
+			} else if (defaultMapValue instanceof Float && value instanceof Double) {
+				castMap.put(key, ((Double) value).floatValue());
+			} else {
+				castMap.put(key, value);
+			}
+		}
+		return castMap;
+	}
+
+	/**
+	 * Clamps a value to the min and max values specified in the config entry annotation.
+	 *
+	 * @param value the value to clamp
+	 * @param key   the config option name
+	 * @return double
+	 */
 	private double clampToBounds(double value, String key) {
 		double min = getMin(configClass, key);
 		double max = getMax(configClass, key);
@@ -513,6 +538,16 @@ public class ConfigManager {
 		}
 
 		return Double.MIN_VALUE;
+	}
+
+	/**
+	 * Get the default values of this configuration.
+	 *
+	 * @return Map
+	 */
+	@AvailableSince("1.0.0")
+	public Map<String, Object> getDefaultValues() {
+		return defaultValues;
 	}
 
 	/**

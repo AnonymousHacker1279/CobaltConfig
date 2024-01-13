@@ -13,6 +13,7 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.gui.widget.ExtendedSlider;
 import org.jetbrains.annotations.Nullable;
 import tech.anonymoushacker1729.cobaltconfig.CobaltConfig;
@@ -207,7 +208,7 @@ public class CobaltConfigScreen extends Screen {
 
 				this.button = Button.builder(configManager.getConfigName(), button -> {
 							// Reload the config from file in case it was changed externally
-							configManager.initializeConfig(configManager.getConfigClass());
+							configManager.reload(configManager.getConfigClass());
 							Map<String, Object> configValues = ConfigManager.classToMap(configManager.getConfigClass());
 
 							if (configValues != null) {
@@ -278,7 +279,7 @@ public class CobaltConfigScreen extends Screen {
 
 				// Add all the entries of the group
 				for (Map.Entry<String, Object> entry : groupEntry.getValue()) {
-					this.addEntry(new ConfigValueEntry(entry.getKey(), entry.getValue(), i++, configClass, additionalHeight));
+					this.addEntry(new ConfigValueEntry(entry.getKey(), entry.getValue(), i++, configClass, configManager, additionalHeight));
 				}
 			}
 		}
@@ -331,6 +332,7 @@ public class CobaltConfigScreen extends Screen {
 			private Button valueButton;
 			@Nullable
 			private CustomSliderWidget valueSlider;
+			private final SpriteIconButton resetButton;
 			@Nullable
 			private MultiLineTextWidget commentWidget;
 			@Nullable
@@ -339,7 +341,7 @@ public class CobaltConfigScreen extends Screen {
 			private final String key;
 			private final int additionalHeight;
 
-			public ConfigValueEntry(String key, Object value, int index, Class<?> configClass, int additionalHeight) {
+			public ConfigValueEntry(String key, Object value, int index, Class<?> configClass, ConfigManager configManager, int additionalHeight) {
 				this.valueType = value.getClass();
 				this.key = key;
 				this.additionalHeight = additionalHeight;
@@ -352,9 +354,9 @@ public class CobaltConfigScreen extends Screen {
 				int widgetX = minecraft.getWindow().getGuiScaledWidth() - 196; // box width of 175 + padding of 21 = 196
 				if (value instanceof Boolean) {
 					// Create a button for boolean values
-					valueButton = Button.builder((Boolean) value ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF, (btn) -> {
-						boolean currentValue = btn.getMessage().equals(CommonComponents.OPTION_ON);
-						btn.setMessage(currentValue ? CommonComponents.OPTION_OFF : CommonComponents.OPTION_ON);
+					valueButton = Button.builder((Boolean) value ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF, (button) -> {
+						boolean currentValue = button.getMessage().equals(CommonComponents.OPTION_ON);
+						button.setMessage(currentValue ? CommonComponents.OPTION_OFF : CommonComponents.OPTION_ON);
 					}).bounds(widgetX, elementY, 175, 20).build();
 					addRenderableWidget(valueButton);
 				} else if (value instanceof Integer || value instanceof Double || value instanceof Float) {
@@ -398,6 +400,40 @@ public class CobaltConfigScreen extends Screen {
 
 					addRenderableWidget(valueField);
 				}
+
+				// Add a reset button to the left of the value widget
+				resetButton = SpriteIconButton.builder(Component.translatable("cobaltconfig.screen.reset_button"), (button) -> {
+							Map<String, Object> defaultValues = configManager.getDefaultValues();
+							Object defaultValue = defaultValues.get(key);
+
+							if (defaultValue != null) {
+								if (valueField != null) {
+									if (Map.class.isAssignableFrom(valueType)) {
+										Type type = new TypeToken<Map<String, ?>>() {}.getType();
+										valueField.setValue(gson.toJson(defaultValue, type));
+									} else {
+										valueField.setValue(defaultValue.toString());
+									}
+								} else if (valueButton != null) {
+									valueButton.setMessage((Boolean) defaultValue ? CommonComponents.OPTION_ON : CommonComponents.OPTION_OFF);
+								} else if (valueSlider != null) {
+									if (defaultValue instanceof Integer i) {
+										valueSlider.setValue(i);
+									} else if (defaultValue instanceof Float f) {
+										valueSlider.setValue(f);
+									} else {
+										valueSlider.setValue((double) defaultValue);
+									}
+								}
+							}
+
+						}, true)
+						.sprite(new ResourceLocation(CobaltConfig.MOD_ID, "icon/reset"), 12, 12)
+						.size(20, 20)
+						.build();
+				resetButton.setPosition(widgetX - 21, elementY);
+				resetButton.setTooltip(Tooltip.create(Component.translatable("cobaltconfig.screen.reset_button")));
+				addRenderableWidget(resetButton);
 
 				// Get the comment or translatable comment from the ConfigEntry annotation
 				String comment = ConfigManager.getComment(configClass, key);
@@ -492,6 +528,9 @@ public class CobaltConfigScreen extends Screen {
 					valueSlider.setY(newY);
 					valueSlider.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 				}
+
+				resetButton.setY(newY);
+				resetButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
 			}
 
 			@Override
@@ -507,6 +546,7 @@ public class CobaltConfigScreen extends Screen {
 			private List<? extends AbstractWidget> getActiveWidgets() {
 				List<AbstractWidget> widgets = new ArrayList<>(10);
 				widgets.add(textWidget);
+				widgets.add(resetButton);
 				if (commentWidget != null) {
 					widgets.add(commentWidget);
 				}
