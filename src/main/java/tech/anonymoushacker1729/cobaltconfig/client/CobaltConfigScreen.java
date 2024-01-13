@@ -387,7 +387,12 @@ public class CobaltConfigScreen extends Screen {
 					// Create an EditBox for other types of values
 					valueField = new EditBox(minecraft.font, widgetX, elementY, 175, 20, Component.nullToEmpty(""));
 					valueField.setMaxLength(9999);
-					valueField.setValue(value.toString());
+
+					if (Map.class.isAssignableFrom(valueType)) {
+						valueField.setValue(gson.toJson(value));
+					} else {
+						valueField.setValue(value.toString());
+					}
 
 					addRenderableWidget(valueField);
 				}

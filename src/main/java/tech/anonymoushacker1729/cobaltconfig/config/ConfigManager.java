@@ -273,7 +273,21 @@ public class ConfigManager {
 			} else if (defaultValue instanceof List && configValue instanceof List<?> listValue) {
 				return new ArrayList<>(listValue);
 			} else if (defaultValue instanceof Map && configValue instanceof Map<?, ?> mapValue) {
-				return new HashMap<>(mapValue);
+				Map<String, Object> castMap = new HashMap<>(30);
+				Map<String, Object> defaultMap = (Map<String, Object>) defaultValue;
+				for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
+					String key = (String) entry.getKey();
+					Object value = entry.getValue();
+					Object defaultMapValue = defaultMap.get(key);
+					if (defaultMapValue instanceof Integer && value instanceof Double) {
+						castMap.put(key, ((Double) value).intValue());
+					} else if (defaultMapValue instanceof Float && value instanceof Double) {
+						castMap.put(key, ((Double) value).floatValue());
+					} else {
+						castMap.put(key, value);
+					}
+				}
+				return castMap;
 			}
 
 			try {
