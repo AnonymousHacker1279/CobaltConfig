@@ -357,13 +357,15 @@ public class CobaltConfigScreen extends Screen {
 						btn.setMessage(currentValue ? CommonComponents.OPTION_OFF : CommonComponents.OPTION_ON);
 					}).bounds(widgetX, elementY, 175, 20).build();
 					addRenderableWidget(valueButton);
-				} else if (value instanceof Integer || value instanceof Double) {
+				} else if (value instanceof Integer || value instanceof Double || value instanceof Float) {
 					double min = ConfigManager.getMin(configClass, key);
 					double max = ConfigManager.getMax(configClass, key);
 
 					if (min != Double.MIN_VALUE || max != Double.MAX_VALUE) {
-						if (value instanceof Integer integer) {
-							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, integer, valueType);
+						if (value instanceof Integer i) {
+							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, i, valueType);
+						} else if (value instanceof Float f) {
+							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, f, valueType);
 						} else {
 							valueSlider = new CustomSliderWidget(widgetX, elementY, 175, 20, Component.nullToEmpty(""), min, max, (double) value, valueType);
 						}
