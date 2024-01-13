@@ -216,6 +216,7 @@ public class CobaltConfigScreen extends Screen {
 								}
 
 								configValueList = addRenderableWidget(new ConfigValueList(minecraft, height - 60, 7, 25, configValues, configManager));
+								configValueList.setFocused(true);
 
 								// Hide the splash text
 								if (splashTextWidget != null) {
@@ -283,41 +284,42 @@ public class CobaltConfigScreen extends Screen {
 		}
 
 		@Override
-		protected void clearEntries() {
-			// Iterate over all entries
+		protected int getScrollbarPosition() {
+			// Should be at the far right of the screen minus 14 pixels
+			return parent.width - 14;
+		}
+
+		@Override
+		public int getMaxScroll() {
+			int totalHeight = 0;
 			for (ConfigValueEntry entry : this.children()) {
-				// Clear the text content of the button
-				if (entry.valueButton != null) {
-					entry.valueButton.setMessage(Component.nullToEmpty(null));
-					entry.valueButton.visible = false;
-				}
-
-				// Clear the text content of the edit box
-				if (entry.valueField != null) {
-					entry.valueField.setValue("");
-					entry.valueField.setVisible(false);
-				}
-
-				// Clear the text content of the slider
-				if (entry.valueSlider != null) {
-					entry.valueSlider.setMessage(Component.nullToEmpty(null));
-					entry.valueSlider.visible = false;
-				}
-
-				// Clear the text content of the comment
-				if (entry.commentWidget != null) {
-					entry.commentWidget.setMessage(Component.nullToEmpty(null));
-					entry.commentWidget.visible = false;
-				}
-
-				// Clear the text content of the group
+				totalHeight += 20; // Assuming each entry has a height of 20
 				if (entry.groupTextWidget != null) {
-					entry.groupTextWidget.setMessage(Component.nullToEmpty(null));
-					entry.groupTextWidget.visible = false;
+					totalHeight += 15; // Assuming the group text widget has a height of 15
+				}
+				if (entry.commentWidget != null) {
+					totalHeight += 10; // Assuming the comment widget has a height of 10
 				}
 			}
 
+			return (totalHeight - this.height) / 2;
+		}
+
+		@Override
+		protected void clearEntries() {
+			clearWidgets();
+			init();
 			super.clearEntries();
+		}
+
+		@Override
+		public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
+			// Only allow scrolling if there are enough elements to have a scrollbar
+			if (getMaxScroll() > 0) {
+				return super.mouseScrolled(pMouseX, pMouseY, pScrollX, pScrollY);
+			} else {
+				return false;
+			}
 		}
 
 		public class ConfigValueEntry extends Entry<ConfigValueEntry> {
@@ -346,7 +348,6 @@ public class CobaltConfigScreen extends Screen {
 				int elementY = (10 + index * 20) + additionalHeight;
 				textWidget = new MultiLineTextWidget(215, elementY, keyComponent, minecraft.font);
 				textWidget.setMaxWidth(512);
-
 
 				int widgetX = minecraft.getWindow().getGuiScaledWidth() - 196; // box width of 175 + padding of 21 = 196
 				if (value instanceof Boolean) {
@@ -439,7 +440,20 @@ public class CobaltConfigScreen extends Screen {
 
 			@Override
 			public void render(GuiGraphics pGuiGraphics, int pIndex, int pTop, int pLeft, int pWidth, int pHeight, int pMouseX, int pMouseY, boolean pHovering, float pPartialTick) {
-				int newY = pTop + additionalHeight;
+				int newY = pTop + additionalHeight - (int) ConfigValueList.this.getScrollAmount();
+
+				// If widgets are outside the viewing area, hide them
+				if (newY < 7 || newY > ConfigValueList.this.height - pHeight || newY > ConfigValueList.this.height) {
+					for (AbstractWidget widget : getActiveWidgets()) {
+						hideWidgets(widget);
+					}
+
+					return;
+				} else {
+					for (AbstractWidget widget : getActiveWidgets()) {
+						widget.visible = true;
+					}
+				}
 
 				// Adjust the y position based on whether the group text widget exists
 				if (groupTextWidget != null && !groupTextWidget.getMessage().getString().isEmpty()) {
@@ -475,12 +489,33 @@ public class CobaltConfigScreen extends Screen {
 
 			@Override
 			public List<? extends GuiEventListener> children() {
-				return Lists.newArrayList(textWidget, valueField);
+				return getActiveWidgets();
 			}
 
 			@Override
 			public List<? extends NarratableEntry> narratables() {
-				return Lists.newArrayList(textWidget, valueField);
+				return getActiveWidgets();
+			}
+
+			private List<? extends AbstractWidget> getActiveWidgets() {
+				List<AbstractWidget> widgets = new ArrayList<>(10);
+				widgets.add(textWidget);
+				if (commentWidget != null) {
+					widgets.add(commentWidget);
+				}
+				if (groupTextWidget != null) {
+					widgets.add(groupTextWidget);
+				}
+				if (valueField != null) {
+					widgets.add(valueField);
+				}
+				if (valueButton != null) {
+					widgets.add(valueButton);
+				}
+				if (valueSlider != null) {
+					widgets.add(valueSlider);
+				}
+				return widgets;
 			}
 
 			public Class<?> getValueType() {
