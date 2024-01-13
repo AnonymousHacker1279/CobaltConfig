@@ -27,6 +27,7 @@ public class CobaltConfigTest {
 		@SubscribeEvent
 		public static void setup(FMLCommonSetupEvent event) {
 			LOGGER.debug("testIntOption: " + TestConfigEntries.testIntOption);
+			LOGGER.debug("testFloatOption: " + TestConfigEntries.testFloatOption);
 			LOGGER.debug("testDoubleOption: " + TestConfigEntries.testDoubleOption);
 			LOGGER.debug("testBoolean: " + TestConfigEntries.testBoolean);
 			LOGGER.debug("testList: " + TestConfigEntries.testList);
@@ -77,14 +78,17 @@ public class CobaltConfigTest {
 		@ConfigEntry(comment = "This is an int config option", max = 100)
 		public static int testIntOption = 50;
 
+		@ConfigEntry(comment = "This is a float config option", min = 5.0, max = 15.0)
+		public static float testFloatOption = 10.0f;
+
 		@ConfigEntry(comment = "This is a double config option", min = 5.0, max = 15.0)
-		public static double testDoubleOption = 10.0;
+		public static double testDoubleOption = 10.0d;
 
 		@ConfigEntry(comment = "This is an int config option with no bounds")
 		public static int testIntOptionNoBounds = 50;
 
 		@ConfigEntry(comment = "This is a double config option with no bounds")
-		public static double testDoubleOptionNoBounds = 10.0;
+		public static double testDoubleOptionNoBounds = 10.0d;
 
 		@ConfigEntry(comment = "This is a boolean config option")
 		public static boolean testBoolean = true;

@@ -268,6 +268,8 @@ public class ConfigManager {
 
 			if (defaultValue instanceof Integer && configValue instanceof Double doubleValue) {
 				return (int) clampToBounds(doubleValue.intValue(), name);
+			} else if (defaultValue instanceof Float && configValue instanceof Double doubleValue) {
+				return (float) clampToBounds(doubleValue.floatValue(), name);
 			} else if (defaultValue instanceof List && configValue instanceof List<?> listValue) {
 				return new ArrayList<>(listValue);
 			} else if (defaultValue instanceof Map && configValue instanceof Map<?, ?> mapValue) {

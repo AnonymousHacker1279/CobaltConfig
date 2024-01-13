@@ -81,6 +81,8 @@ public class CobaltConfigScreen extends Screen {
 							value = Integer.parseInt(valueString);
 						} else if (entry.getValueType() == Double.class) {
 							value = Double.parseDouble(valueString);
+						} else if (entry.getValueType() == Float.class) {
+							value = Float.parseFloat(valueString);
 						} else if (entry.getValueType() == Boolean.class) {
 							value = Boolean.parseBoolean(valueString);
 						} else if (List.class.isAssignableFrom(entry.getValueType())) {
