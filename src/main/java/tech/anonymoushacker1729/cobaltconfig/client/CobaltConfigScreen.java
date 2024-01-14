@@ -262,7 +262,7 @@ public class CobaltConfigScreen extends Screen {
 
 			setX(200);
 
-			Map<String, List<Map.Entry<String, Object>>> sortedEntries = new TreeMap<>();
+			Map<String, List<Map.Entry<String, Object>>> sortedEntries = new LinkedHashMap<>(30);
 			for (Map.Entry<String, Object> entry : configValues.entrySet()) {
 				String group = ConfigManager.getGroup(configClass, entry.getKey());
 				sortedEntries.computeIfAbsent(group, k -> new ArrayList<>(5)).add(entry);

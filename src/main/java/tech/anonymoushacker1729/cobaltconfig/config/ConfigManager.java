@@ -406,7 +406,7 @@ public class ConfigManager {
 	 * @return Map
 	 */
 	private static Map<String, Object> buildConfigValuesMap(Class<?> configClass) {
-		Map<String, Object> configValues = new HashMap<>(30);
+		Map<String, Object> configValues = new LinkedHashMap<>(30);
 		for (Field field : configClass.getDeclaredFields()) {
 			if (field.isAnnotationPresent(ConfigEntry.class)) {
 				try {
