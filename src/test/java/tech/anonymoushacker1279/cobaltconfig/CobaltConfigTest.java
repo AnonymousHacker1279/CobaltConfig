@@ -93,6 +93,9 @@ public class CobaltConfigTest {
 		@ConfigEntry(comment = "This is a boolean config option")
 		public static boolean testBoolean = true;
 
+		@ConfigEntry(comment = "This is a boolean config option that requires a restart", restartRequired = true)
+		public static boolean testBooleanRestartRequired = false;
+
 		@ConfigEntry(comment = "This is a list config option", group = "Test Group")
 		public static List<Integer> testList = Arrays.asList(1, 2, 3);
 

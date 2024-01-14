@@ -3,6 +3,7 @@
 	"cobaltconfig.screen.json_error": "Failed to save config. Please check lists/maps for formatting errors.",
 	"cobaltconfig.screen.config_button.common_config": "This is a common configuration. It will apply to singleplayer worlds but when connecting to a server it may be overridden.",
 	"cobaltconfig.screen.config_button.client_config": "This is a client-only configuration. Values here are native to only your client.",
-	"cobaltconfig.screen.reset_button": "Reset to Default Value",
+	"cobaltconfig.screen.reset_button": "Reset to Default",
+	"cobaltconfig.screen.restart_required_button": "A restart is required for changes to take effect.",
 	"cobaltconfig.screen.splash_text": "Cobalt Config by AnonymousHacker1279"
 }

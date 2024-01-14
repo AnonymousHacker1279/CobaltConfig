@@ -334,6 +334,8 @@ public class CobaltConfigScreen extends Screen {
 			private CustomSliderWidget valueSlider;
 			private final SpriteIconButton resetButton;
 			@Nullable
+			private SpriteIconButton restartRequiredButton;
+			@Nullable
 			private MultiLineTextWidget commentWidget;
 			@Nullable
 			private MultiLineTextWidget groupTextWidget;
@@ -435,6 +437,17 @@ public class CobaltConfigScreen extends Screen {
 				resetButton.setTooltip(Tooltip.create(Component.translatable("cobaltconfig.screen.reset_button")));
 				addRenderableWidget(resetButton);
 
+				// Add a restart required button if this entry needs it
+				if (ConfigManager.getRestartRequired(configClass, key)) {
+					restartRequiredButton = SpriteIconButton.builder(Component.translatable("cobaltconfig.screen.restart_required_button"), (button) -> {}, true)
+							.sprite(new ResourceLocation(CobaltConfig.MOD_ID, "icon/restart_required"), 12, 12)
+							.size(20, 20)
+							.build();
+					restartRequiredButton.setPosition(widgetX - 42, elementY);
+					restartRequiredButton.setTooltip(Tooltip.create(Component.translatable("cobaltconfig.screen.restart_required_button")));
+					addRenderableWidget(restartRequiredButton);
+				}
+
 				// Get the comment or translatable comment from the ConfigEntry annotation
 				String comment = ConfigManager.getComment(configClass, key);
 				Component commentComponent = null;
@@ -531,6 +544,11 @@ public class CobaltConfigScreen extends Screen {
 
 				resetButton.setY(newY);
 				resetButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+
+				if (restartRequiredButton != null) {
+					restartRequiredButton.setY(newY);
+					restartRequiredButton.render(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
+				}
 			}
 
 			@Override
@@ -561,6 +579,9 @@ public class CobaltConfigScreen extends Screen {
 				}
 				if (valueSlider != null) {
 					widgets.add(valueSlider);
+				}
+				if (restartRequiredButton != null) {
+					widgets.add(restartRequiredButton);
 				}
 				return widgets;
 			}

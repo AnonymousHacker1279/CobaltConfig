@@ -536,6 +536,28 @@ public class ConfigManager {
 	}
 
 	/**
+	 * Get the {@link ConfigEntry#restartRequired()} for a given key if present.
+	 *
+	 * @param configClass the config class
+	 * @param key         the key
+	 * @return true if a restart is required
+	 */
+	@AvailableSince("1.0.0")
+	public static boolean getRestartRequired(Class<?> configClass, String key) {
+		try {
+			Field field = configClass.getField(key);
+			ConfigEntry configEntry = field.getAnnotation(ConfigEntry.class);
+			if (configEntry != null) {
+				return configEntry.restartRequired();
+			}
+		} catch (NoSuchFieldException e) {
+			throw new RuntimeException("Config field not found: " + key, e);
+		}
+
+		return false;
+	}
+
+	/**
 	 * Get the default values of this configuration.
 	 *
 	 * @return Map

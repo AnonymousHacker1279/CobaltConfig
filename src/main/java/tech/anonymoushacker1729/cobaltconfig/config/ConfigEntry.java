@@ -28,4 +28,9 @@ public @interface ConfigEntry {
 	 * Define the maximum value for numeric entries.
 	 */
 	double max() default Double.MAX_VALUE;
+
+	/**
+	 * Mark that an entry requires a restart for changes to take effect.
+	 */
+	boolean restartRequired() default false;
 }
