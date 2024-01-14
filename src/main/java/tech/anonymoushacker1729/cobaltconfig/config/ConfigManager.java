@@ -25,7 +25,6 @@ public class ConfigManager {
 	private final Path path;
 	private final boolean clientOnly;
 	private final String configName;
-	private final boolean isConfigNameTranslatable;
 	private final Map<String, Object> defaultValues = new HashMap<>(30);
 
 	private static final List<ConfigManager> instances = new ArrayList<>(10);
@@ -42,13 +41,12 @@ public class ConfigManager {
 	 * @param configClass the config class
 	 * @param clientOnly  whether the config is client-only
 	 */
-	private ConfigManager(String modId, @Nullable String suffix, Class<?> configClass, boolean clientOnly, String configName, boolean isConfigNameTranslatable) {
+	private ConfigManager(String modId, @Nullable String suffix, Class<?> configClass, boolean clientOnly, String configName) {
 		this.modId = modId;
 		this.configClass = configClass;
 		this.path = getConfigPath(modId, suffix);
 		this.clientOnly = clientOnly;
 		this.configName = configName;
-		this.isConfigNameTranslatable = isConfigNameTranslatable;
 
 		instances.add(this);
 
@@ -68,7 +66,6 @@ public class ConfigManager {
 		private final String suffix;
 		private boolean clientOnly = false;
 		private String configName;
-		private boolean isConfigNameTranslatable;
 
 		/**
 		 * Creates a new <code>ConfigBuilder</code> instance with no suffix.
@@ -117,14 +114,12 @@ public class ConfigManager {
 		 * <p>
 		 * This is used for listing available config buttons in the config screen, if one is registered.
 		 *
-		 * @param configName               the config name
-		 * @param isConfigNameTranslatable whether the config name is translatable
+		 * @param configName the config name
 		 * @return ConfigBuilder
 		 */
 		@AvailableSince("1.0.0")
-		public ConfigBuilder setConfigName(String configName, boolean isConfigNameTranslatable) {
+		public ConfigBuilder setConfigName(String configName) {
 			this.configName = configName;
-			this.isConfigNameTranslatable = isConfigNameTranslatable;
 			return this;
 		}
 
@@ -133,7 +128,7 @@ public class ConfigManager {
 		 */
 		@AvailableSince("1.0.0")
 		public void build() {
-			new ConfigManager(modId, suffix, configClass, clientOnly, configName, isConfigNameTranslatable);
+			new ConfigManager(modId, suffix, configClass, clientOnly, configName);
 		}
 	}
 
@@ -557,7 +552,7 @@ public class ConfigManager {
 	 */
 	@AvailableSince("1.0.0")
 	public Component getConfigName() {
-		return isConfigNameTranslatable ? Component.translatable(configName) : Component.literal(configName);
+		return Component.translatable(configName);
 	}
 
 	/**

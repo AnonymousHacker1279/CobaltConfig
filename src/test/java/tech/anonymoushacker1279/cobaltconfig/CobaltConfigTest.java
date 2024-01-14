@@ -40,10 +40,10 @@ public class CobaltConfigTest {
 
 			// Test config
 			new ConfigBuilder(CobaltConfig.MOD_ID, "test", TestConfigEntries.class)
-					.setConfigName("Test Common Config", false)
+					.setConfigName("Test Common Config")
 					.build();
 			new ConfigBuilder(CobaltConfig.MOD_ID, "test-client", TestConfigClientEntries.class)
-					.setConfigName("Test Client Config", false)
+					.setConfigName("Test Client Config")
 					.setClientOnly(true)
 					.build();
 		}
