@@ -34,6 +34,7 @@ public class CobaltConfigScreen extends Screen {
 	private MultiLineTextWidget errorWidget;
 	@Nullable
 	private MultiLineTextWidget splashTextWidget;
+	private double previousGuiScale = 0d;
 
 	private static final Gson gson = new Gson();
 
@@ -42,10 +43,21 @@ public class CobaltConfigScreen extends Screen {
 
 		this.parent = parent;
 		this.modId = modId;
+
+		minecraft = parent.getMinecraft();
+
+		previousGuiScale = getMinecraft().getWindow().getGuiScale();
+		getMinecraft().getWindow().setGuiScale(2.0d);
 	}
 
 	public static Screen getScreen(Screen parent, String modId) {
 		return new CobaltConfigScreen(parent, modId);
+	}
+
+	@Override
+	public void onClose() {
+		getMinecraft().getWindow().setGuiScale(previousGuiScale);
+		getMinecraft().setScreen(parent);
 	}
 
 	@Override
@@ -59,7 +71,7 @@ public class CobaltConfigScreen extends Screen {
 		List<ConfigManager> configManagers = ConfigManager.getManagers(modId, false);
 
 		// Add a list of config classes
-		ConfigList configList = this.addRenderableWidget(new ConfigList(minecraft, 175, this.height, 7, 20, configManagers));
+		ConfigList configList = this.addRenderableWidget(new ConfigList(minecraft, 175, minecraft.getWindow().getGuiScaledHeight(), 7, 20, configManagers));
 
 		// Add a save button
 		this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, (button) -> {
@@ -129,14 +141,14 @@ public class CobaltConfigScreen extends Screen {
 
 					CobaltConfig.LOGGER.info("Saved config for " + configManager.getConfigName().getString() + " [" + configManager.getModId() + "]");
 
-					minecraft.setScreen(parent);
+					onClose();
 				} else {
 					if (errorWidget != null) {
 						errorWidget.setMessage(Component.nullToEmpty(null));
 					}
 
-					errorWidget = new MultiLineTextWidget((width / 2 + 4) + 155,
-							this.height - 48,
+					errorWidget = new MultiLineTextWidget((minecraft.getWindow().getGuiScaledWidth() / 2 + 4) + 155,
+							minecraft.getWindow().getGuiScaledHeight() - 48,
 							Component.translatable("cobaltconfig.screen.json_error")
 									.withStyle(ChatFormatting.ITALIC, ChatFormatting.RED),
 							minecraft.font);
@@ -147,40 +159,23 @@ public class CobaltConfigScreen extends Screen {
 			}
 
 			if (!failed) {
-				minecraft.setScreen(parent);
+				onClose();
 			}
-		}).bounds(this.width / 2 + 4, this.height - 28, 150, 20).build());
+		}).bounds(this.minecraft.getWindow().getGuiScaledWidth() / 2 + 4, minecraft.getWindow().getGuiScaledHeight() - 28, 150, 20).build());
 
 		// Add a cancel button
 		this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, button -> {
-			minecraft.setScreen(parent);
-		}).bounds(this.width / 2 - 154, this.height - 28, 150, 20).build());
+			onClose();
+		}).bounds(minecraft.getWindow().getGuiScaledWidth() / 2 - 154, minecraft.getWindow().getGuiScaledHeight() - 28, 150, 20).build());
 
 		// Add a splash text to the center of the screen
-		splashTextWidget = new MultiLineTextWidget((width / 2),
-				(this.height / 2),
+		splashTextWidget = new MultiLineTextWidget((minecraft.getWindow().getGuiScaledWidth() / 2),
+				(minecraft.getWindow().getGuiScaledHeight() / 2),
 				Component.translatable("cobaltconfig.screen.splash_text")
 						.withStyle(ChatFormatting.ITALIC, ChatFormatting.BLUE),
-				minecraft.font) {
-			@Override
-			public void renderWidget(GuiGraphics pGuiGraphics, int pMouseX, int pMouseY, float pPartialTick) {
-				// Calculate the center of the text
-				float textCenterX = this.getX() + this.width / 3.0F;
-				float textCenterY = this.getY() + this.height / 3.0F;
-
-				// Translate to the center of the text
-				pGuiGraphics.pose().translate(textCenterX, textCenterY, 0);
-				// Scale
-				pGuiGraphics.pose().scale(3f, 3f, 3f);
-				// Translate back
-				pGuiGraphics.pose().translate(-textCenterX, -textCenterY, 0);
-				super.renderWidget(pGuiGraphics, pMouseX, pMouseY, pPartialTick);
-
-				// Reset the pose
-				pGuiGraphics.pose().setIdentity();
-			}
-		};
+				minecraft.font);
 		splashTextWidget.setMaxWidth(128);
+		splashTextWidget.setCentered(true);
 
 		addRenderableWidget(splashTextWidget);
 	}
@@ -216,7 +211,7 @@ public class CobaltConfigScreen extends Screen {
 									configValueList.clearEntries();
 								}
 
-								configValueList = addRenderableWidget(new ConfigValueList(minecraft, height - 60, 7, 25, configValues, configManager));
+								configValueList = addRenderableWidget(new ConfigValueList(minecraft, minecraft.getWindow().getGuiScaledHeight() - 60, 7, 25, configValues, configManager));
 								configValueList.setFocused(true);
 
 								// Hide the splash text
@@ -287,7 +282,7 @@ public class CobaltConfigScreen extends Screen {
 		@Override
 		protected int getScrollbarPosition() {
 			// Should be at the far right of the screen minus 14 pixels
-			return parent.width - 14;
+			return minecraft.getWindow().getGuiScaledWidth() - 14;
 		}
 
 		@Override
@@ -303,7 +298,7 @@ public class CobaltConfigScreen extends Screen {
 				}
 			}
 
-			return (totalHeight - this.height) / 2;
+			return (totalHeight - minecraft.getWindow().getGuiScaledHeight()) / 2;
 		}
 
 		@Override
