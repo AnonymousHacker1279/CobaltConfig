@@ -1,3 +1,6 @@
-This is the first release of Cobalt Config!
+This release includes a couple minor bugfixes.
 
-Check the [wiki](https://github.com/AnonymousHacker1279/CobaltConfig/wiki) for information on how to get started.
+### Bugfixes
+
+- Prevent common configs from being modified while connected to dedicated servers
+- Fix config file lists not properly sorting by mod ID

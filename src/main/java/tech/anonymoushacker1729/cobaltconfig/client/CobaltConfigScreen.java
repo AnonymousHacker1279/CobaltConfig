@@ -223,6 +223,15 @@ public class CobaltConfigScreen extends Screen {
 						.bounds(getX() + 7, 10 + (index + 20), 160, 20)
 						.tooltip(Tooltip.create(configManager.isClientOnly() ? Component.translatable("cobaltconfig.screen.config_button.client_config") : Component.translatable("cobaltconfig.screen.config_button.common_config")))
 						.build();
+
+				if (minecraft.getConnection() != null && !minecraft.getConnection().getConnection().isMemoryConnection()) {
+					if (!configManager.isClientOnly()) {
+						button.active = false;
+						button.setTooltip(Tooltip.create(Component.translatable("cobaltconfig.screen.config_button.common_config")
+								.append("\n\n")
+								.append(Component.translatable("cobaltconfig.screen.config_button.common_config.unavailable"))));
+					}
+				}
 			}
 
 			@Override

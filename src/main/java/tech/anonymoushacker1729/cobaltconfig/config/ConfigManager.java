@@ -435,9 +435,9 @@ public class ConfigManager {
 	public static List<ConfigManager> getManagers(String modId, boolean ignoreClientOnly) {
 		if (ignoreClientOnly) {
 			return instances.stream().filter(manager -> !manager.clientOnly && manager.modId.equals(modId)).toList();
+		} else {
+			return instances.stream().filter(manager -> manager.modId.equals(modId)).toList();
 		}
-
-		return instances;
 	}
 
 	/**
