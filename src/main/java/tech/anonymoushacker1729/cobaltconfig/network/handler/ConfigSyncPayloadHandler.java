@@ -14,11 +14,11 @@ public class ConfigSyncPayloadHandler {
 	}
 
 	public void handleData(final ConfigSyncPayload data, final IPayloadContext context) {
-		context.workHandler().submitAsync(() -> {
+		context.enqueueWork(() -> {
 					ConfigManager.loadFromMap(data.configClassName(), data.configValues());
 				})
 				.exceptionally(e -> {
-					context.packetHandler().disconnect(Component.translatable("cobaltconfig.networking.failure.generic", e.getMessage()));
+					context.disconnect(Component.translatable("cobaltconfig.networking.failure.generic", e.getMessage()));
 					return null;
 				});
 	}

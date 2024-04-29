@@ -2,15 +2,19 @@ package tech.anonymoushacker1729.cobaltconfig;
 
 import com.mojang.logging.LogUtils;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.event.OnGameConfigurationEvent;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
-import net.neoforged.neoforge.network.registration.IPayloadRegistrar;
+import net.neoforged.neoforge.network.event.RegisterConfigurationTasksEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforgespi.language.IModInfo;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.slf4j.Logger;
 import tech.anonymoushacker1729.cobaltconfig.config.ConfigManager;
 import tech.anonymoushacker1729.cobaltconfig.network.handler.ConfigSyncPayloadHandler;
@@ -35,19 +39,25 @@ public class CobaltConfig {
 		NeoForge.EVENT_BUS.addListener(this::clientPlayerNetworkLoggingOutEvent);
 	}
 
-	public void registerGameConfigurationEvent(final OnGameConfigurationEvent event) {
+	public void registerGameConfigurationEvent(final RegisterConfigurationTasksEvent event) {
 		LOGGER.info("Registering game configuration tasks");
 
 		event.register(new ConfigSyncConfigurationTask(event.getListener()));
 	}
 
-	public void registerPayloadHandlerEvent(RegisterPayloadHandlerEvent event) {
+	public void registerPayloadHandlerEvent(RegisterPayloadHandlersEvent event) {
 		LOGGER.info("Registering packet payload handlers");
 
-		final IPayloadRegistrar registrar = event.registrar(MOD_ID);
+		String version = ModList.get()
+				.getModContainerById(MOD_ID)
+				.map(ModContainer::getModInfo)
+				.map(IModInfo::getVersion)
+				.map(ArtifactVersion::toString)
+				.orElse("[UNKNOWN]");
 
-		registrar.common(ConfigSyncPayload.ID, ConfigSyncPayload::fromBuffer, handler -> handler
-				.client(ConfigSyncPayloadHandler.getInstance()::handleData));
+		PayloadRegistrar registrar = event.registrar(version);
+
+		registrar.commonToClient(ConfigSyncPayload.TYPE, ConfigSyncPayload.STREAM_CODEC, ConfigSyncPayloadHandler.getInstance()::handleData);
 	}
 
 	public void reloadEvent(AddReloadListenerEvent event) {
@@ -62,7 +72,7 @@ public class CobaltConfig {
 
 				if (configValues != null) {
 					final ConfigSyncPayload payload = new ConfigSyncPayload(configClassName, configValues);
-					PacketDistributor.ALL.noArg().send(payload);
+					PacketDistributor.sendToAllPlayers(payload);
 				}
 			});
 		}

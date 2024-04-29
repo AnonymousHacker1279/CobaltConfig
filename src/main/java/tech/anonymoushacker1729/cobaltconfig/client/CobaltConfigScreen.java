@@ -505,7 +505,7 @@ public class CobaltConfigScreen extends Screen {
 				// If widgets are outside the viewing area, hide them
 				if (newY < 7 || newY > ConfigValueList.this.height - pHeight || newY > ConfigValueList.this.height) {
 					for (AbstractWidget widget : getActiveWidgets()) {
-						hideWidgets(widget);
+						widget.visible = false;
 					}
 
 					return;
