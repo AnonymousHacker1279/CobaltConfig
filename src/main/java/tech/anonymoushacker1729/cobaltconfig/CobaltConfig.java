@@ -57,7 +57,7 @@ public class CobaltConfig {
 
 		PayloadRegistrar registrar = event.registrar(version);
 
-		registrar.commonToClient(ConfigSyncPayload.TYPE, ConfigSyncPayload.STREAM_CODEC, ConfigSyncPayloadHandler.getInstance()::handleData);
+		registrar.configurationToClient(ConfigSyncPayload.TYPE, ConfigSyncPayload.STREAM_CODEC, ConfigSyncPayloadHandler.getInstance()::handleData);
 	}
 
 	public void reloadEvent(AddReloadListenerEvent event) {
